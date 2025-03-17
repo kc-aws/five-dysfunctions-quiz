@@ -1,4 +1,12 @@
-# Team Dynamics Assessment
+## Interface Overview
+
+The assessment tool features a simple navigation system:
+
+- **Home**: Displays the assessment form where users can answer the 30 questions
+- **Import Results**: Provides an interface to paste and process team member results
+- **Instructions**: Links to a detailed guide on using the assessment tool
+
+All functionality is contained within a single page application for a seamless user experience. The assessment automatically scrolls to the top when displaying results to ensure users can easily review all information.# Team Dynamics Assessment
 
 This web-based tool provides a comprehensive assessment of team dynamics based on Patrick Lencioni's "Five Dysfunctions of a Team" framework. It helps teams identify strengths and opportunities for improvement across five critical dimensions of team effectiveness.
 
@@ -43,6 +51,7 @@ The tool can also aggregate results from multiple team members to provide a comp
 ## Instructions for Individual Users
 
 1. **Taking the Assessment**:
+   - Click the "Home" link in the top navigation if you're not already on the assessment page
    - Answer all 30 questions honestly based on your current team experience
    - Rate each statement from 1 (Rarely) to 5 (Almost Always)
    - Click "Calculate Results" when finished
@@ -67,7 +76,7 @@ The tool can also aggregate results from multiple team members to provide a comp
    - Request that each team member copy their export code and send it to you
 
 2. **Aggregating Team Results**:
-   - Click "Import Team Results" on the main page
+   - Click the "Import Results" link in the top navigation
    - Paste each team member's export code on a separate line in the text box
    - Click "Process Team Results" to generate team averages
 
