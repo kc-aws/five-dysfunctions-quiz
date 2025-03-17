@@ -107,6 +107,33 @@
             background-color: #2980b9;
         }
         
+        .option-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .option-btn {
+            padding: 10px 20px;
+            background-color: #e0e0e0;
+            color: var(--dark-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .option-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .export-container {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
         #results {
             display: none;
             margin-top: 30px;
@@ -197,6 +224,11 @@
         <div class="intro">
             <h1>Team Dynamics Assessment</h1>
             <p>This assessment helps evaluate team dynamics across five key dimensions. Rate each statement based on how it applies to your team.</p>
+            
+            <div class="option-buttons">
+                <button type="button" id="take-assessment-btn" class="option-btn active">Take Assessment</button>
+                <button type="button" id="import-results-btn" class="option-btn">Import Team Results</button>
+            </div>
         </div>
         
         <div id="quiz">
@@ -205,6 +237,13 @@
             </form>
             
             <button type="button" id="submit-button">Calculate Results</button>
+        </div>
+        
+        <div id="import-section" style="display: none;">
+            <h2>Import Team Results</h2>
+            <p>Paste results from multiple team members (one per line) to calculate team averages:</p>
+            <textarea id="import-textarea" rows="10" style="width: 100%; padding: 10px; margin: 20px 0; border-radius: 5px; border: 1px solid #ccc;"></textarea>
+            <button type="button" id="process-import-button">Process Team Results</button>
         </div>
         
         <div id="results">
@@ -224,6 +263,13 @@
             <div style="margin-top: 350px;">
                 <button type="button" id="back-button" class="no-print">Back to Assessment</button>
                 <button type="button" id="print-button" class="print-button no-print">Print Results</button>
+                
+                <div class="export-container no-print" style="margin-top: 40px;">
+                    <h3>Export Results</h3>
+                    <p>Copy this code to share your results with your team:</p>
+                    <div id="export-code" style="padding: 10px; background-color: #f5f5f5; border-radius: 5px; font-family: monospace; margin: 10px 0;"></div>
+                    <button type="button" id="copy-button" class="no-print">Copy to Clipboard</button>
+                </div>
             </div>
             
             <div class="disclaimer">
@@ -351,6 +397,147 @@
                 window.print();
             });
             
+            // Import/take assessment toggle
+            const takeAssessmentBtn = document.getElementById('take-assessment-btn');
+            const importResultsBtn = document.getElementById('import-results-btn');
+            const importSection = document.getElementById('import-section');
+            
+            takeAssessmentBtn.addEventListener('click', function() {
+                this.classList.add('active');
+                importResultsBtn.classList.remove('active');
+                quizDiv.style.display = 'block';
+                importSection.style.display = 'none';
+            });
+            
+            importResultsBtn.addEventListener('click', function() {
+                this.classList.add('active');
+                takeAssessmentBtn.classList.remove('active');
+                quizDiv.style.display = 'none';
+                importSection.style.display = 'block';
+            });
+            
+            // Copy results to clipboard
+            const copyButton = document.getElementById('copy-button');
+            copyButton.addEventListener('click', function() {
+                const exportCode = document.getElementById('export-code');
+                navigator.clipboard.writeText(exportCode.textContent).then(function() {
+                    const originalText = copyButton.textContent;
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(function() {
+                        copyButton.textContent = originalText;
+                    }, 2000);
+                });
+            });
+            
+            // Process imported results
+            const processImportButton = document.getElementById('process-import-button');
+            const importTextarea = document.getElementById('import-textarea');
+            
+            processImportButton.addEventListener('click', function() {
+                const importedText = importTextarea.value.trim();
+                if (!importedText) {
+                    alert('Please paste some results first.');
+                    return;
+                }
+                
+                try {
+                    const lines = importedText.split('\n').filter(line => line.trim());
+                    if (lines.length === 0) {
+                        alert('No valid data found. Please check the format.');
+                        return;
+                    }
+                    
+                    const teamScores = { trust: 0, conflict: 0, commitment: 0, accountability: 0, results: 0 };
+                    let validLines = 0;
+                    
+                    lines.forEach(line => {
+                        const values = line.split(',').map(v => parseFloat(v.trim()));
+                        if (values.length === 5 && values.every(v => !isNaN(v))) {
+                            teamScores.trust += values[0];
+                            teamScores.conflict += values[1];
+                            teamScores.commitment += values[2];
+                            teamScores.accountability += values[3];
+                            teamScores.results += values[4];
+                            validLines++;
+                        }
+                    });
+                    
+                    if (validLines === 0) {
+                        alert('No valid data found. Please check the format.');
+                        return;
+                    }
+                    
+                    // Calculate averages and convert back to percentages
+                    const percentageScores = {};
+                    for (const dimension in teamScores) {
+                        const average = teamScores[dimension] / validLines;
+                        percentageScores[dimension] = Math.round(average * 10); // Convert 0-10 scale back to 0-100
+                    }
+                    
+                    // Display team results
+                    resultsContent.innerHTML = '<h3 class="result-header">Team Average Results (from ' + validLines + ' members)</h3>';
+                    
+                    for (const dimension in percentageScores) {
+                        const score = percentageScores[dimension];
+                        const dimensionInfo = dimensions[dimension];
+                        
+                        const dimensionDiv = document.createElement('div');
+                        dimensionDiv.className = 'dimension';
+                        
+                        const header = document.createElement('h3');
+                        header.innerHTML = `${dimensionInfo.title} <span class="score">${score}%</span>`;
+                        
+                        const progressContainer = document.createElement('div');
+                        progressContainer.className = 'progress-container';
+                        
+                        const progressBar = document.createElement('div');
+                        progressBar.className = 'progress-bar';
+                        progressBar.style.width = `${score}%`;
+                        
+                        const description = document.createElement('p');
+                        description.textContent = dimensionInfo.description;
+                        
+                        const recommendation = document.createElement('p');
+                        if (score < 60) {
+                            recommendation.textContent = `Recommendation: ${dimensionInfo.lowScore}`;
+                        } else if (score < 80) {
+                            recommendation.textContent = `Recommendation: ${dimensionInfo.mediumScore}`;
+                        } else {
+                            recommendation.textContent = `Recommendation: ${dimensionInfo.highScore}`;
+                        }
+                        
+                        progressContainer.appendChild(progressBar);
+                        dimensionDiv.appendChild(header);
+                        dimensionDiv.appendChild(progressContainer);
+                        dimensionDiv.appendChild(description);
+                        dimensionDiv.appendChild(recommendation);
+                        
+                        resultsContent.appendChild(dimensionDiv);
+                    }
+                    
+                    // Generate normalized scores (0-10 scale) for export
+                    const normalizedScores = {
+                        trust: (percentageScores.trust / 10).toFixed(1),
+                        conflict: (percentageScores.conflict / 10).toFixed(1),
+                        commitment: (percentageScores.commitment / 10).toFixed(1),
+                        accountability: (percentageScores.accountability / 10).toFixed(1),
+                        results: (percentageScores.results / 10).toFixed(1)
+                    };
+                    
+                    // Set export code
+                    const exportCode = document.getElementById('export-code');
+                    exportCode.textContent = `${normalizedScores.trust}, ${normalizedScores.conflict}, ${normalizedScores.commitment}, ${normalizedScores.accountability}, ${normalizedScores.results}`;
+                    
+                    createChart(percentageScores);
+                    quizDiv.style.display = 'none';
+                    importSection.style.display = 'none';
+                    resultsDiv.style.display = 'block';
+                    
+                } catch (error) {
+                    alert('Error processing data: ' + error.message);
+                }
+            });
+            
             // Generate questions dynamically
             function generateQuestions() {
                 questions.forEach(question => {
@@ -440,6 +627,19 @@
                     const maxScore = questionCounts[dimension] * 5; // 5 is the max value per question
                     percentageScores[dimension] = Math.round((scores[dimension] / maxScore) * 100);
                 }
+                
+                // Generate normalized scores (0-10 scale) for export
+                const normalizedScores = {
+                    trust: (percentageScores.trust / 10).toFixed(1),
+                    conflict: (percentageScores.conflict / 10).toFixed(1),
+                    commitment: (percentageScores.commitment / 10).toFixed(1),
+                    accountability: (percentageScores.accountability / 10).toFixed(1),
+                    results: (percentageScores.results / 10).toFixed(1)
+                };
+                
+                // Set export code
+                const exportCode = document.getElementById('export-code');
+                exportCode.textContent = `${normalizedScores.trust}, ${normalizedScores.conflict}, ${normalizedScores.commitment}, ${normalizedScores.accountability}, ${normalizedScores.results}`;
                 
                 // Generate results HTML
                 resultsContent.innerHTML = '';
