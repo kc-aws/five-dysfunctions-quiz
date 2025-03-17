@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Dynamics Assessment</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--light-color);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--secondary-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 15px 0;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .intro {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .question {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .options {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .option {
+                width: 45%;
+            }
+        }
+        
+        .option label {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        input[type="radio"] {
+            cursor: pointer;
+        }
+        
+        button {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin: 30px 0;
+        }
+        
+        .dimension {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        .dimension h3 {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .dimension p {
+            margin-bottom: 10px;
+        }
+        
+        .score {
+            margin-left: 10px;
+            font-weight: normal;
+            color: var(--accent-color);
+        }
+        
+        .progress-container {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background-color: var(--primary-color);
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .print-button {
+            background-color: var(--secondary-color);
+        }
+        
+        .print-button:hover {
+            background-color: #1a252f;
+        }
+        
+        .disclaimer {
+            font-size: 12px;
+            color: #777;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        #quiz, #back-button {
+            transition: opacity 0.5s;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body, .container {
+                background-color: white;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="intro">
+            <h1>Team Dynamics Assessment</h1>
+            <p>This assessment helps evaluate team dynamics across five key dimensions. Rate each statement based on how it applies to your team.</p>
+        </div>
+        
+        <div id="quiz">
+            <form id="assessment-form">
+                <!-- Questions will be dynamically inserted here -->
+            </form>
+            
+            <button type="button" id="submit-button">Calculate Results</button>
+        </div>
+        
+        <div id="results">
+            <div class="result-header">
+                <h2>Your Team Assessment Results</h2>
+                <p>Higher scores indicate stronger performance in each area.</p>
+            </div>
+            
+            <div id="results-content">
+                <!-- Results will be dynamically inserted here -->
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="results-chart"></canvas>
+            </div>
+            
+            <button type="button" id="back-button" class="no-print">Back to Assessment</button>
+            <button type="button" id="print-button" class="print-button no-print">Print Results</button>
+            
+            <div class="disclaimer">
+                <p>This assessment is based on concepts from Patrick Lencioni's "Five Dysfunctions of a Team" framework. It is designed for educational purposes and personal development.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Assessment questions organized by dimensions
+        const questions = [
+            // Trust dimension
+            { id: 1, text: "Team members admit their mistakes openly.", dimension: "trust" },
+            { id: 2, text: "Team members are willing to be vulnerable with one another.", dimension: "trust" },
+            { id: 3, text: "Team members ask for help when needed.", dimension: "trust" },
+            { id: 4, text: "Team members speak openly about their weaknesses and limitations.", dimension: "trust" },
+            { id: 5, text: "Team members are genuinely transparent and honest with each other.", dimension: "trust" },
+            { id: 6, text: "Team members are comfortable discussing personal issues that affect work performance.", dimension: "trust" },
+            
+            // Conflict dimension
+            { id: 7, text: "Team meetings include passionate debates about important issues.", dimension: "conflict" },
+            { id: 8, text: "During discussions, team members challenge each other's ideas respectfully.", dimension: "conflict" },
+            { id: 9, text: "The team tackles difficult topics directly rather than avoiding them.", dimension: "conflict" },
+            { id: 10, text: "Team members voice their opinions even when they might be unpopular.", dimension: "conflict" },
+            { id: 11, text: "When conflicts arise, the team works through them productively.", dimension: "conflict" },
+            { id: 12, text: "Different perspectives are valued and explored during discussions.", dimension: "conflict" },
+            
+            // Commitment dimension
+            { id: 13, text: "The team makes clear decisions even when complete consensus isn't possible.", dimension: "commitment" },
+            { id: 14, text: "Team members support decisions once they're made, even if they initially disagreed.", dimension: "commitment" },
+            { id: 15, text: "The team aligns around common objectives effectively.", dimension: "commitment" },
+            { id: 16, text: "The team can reach closure on important issues and move forward.", dimension: "commitment" },
+            { id: 17, text: "Team members end discussions with clear and specific resolutions.", dimension: "commitment" },
+            { id: 18, text: "Everyone understands what is expected of them after team meetings.", dimension: "commitment" },
+            
+            // Accountability dimension
+            { id: 19, text: "Team members hold one another accountable for delivering on commitments.", dimension: "accountability" },
+            { id: 20, text: "The team addresses performance issues directly when they arise.", dimension: "accountability" },
+            { id: 21, text: "Team members challenge each other about their plans and approaches.", dimension: "accountability" },
+            { id: 22, text: "The team ensures that members focus on collective results rather than individual agendas.", dimension: "accountability" },
+            { id: 23, text: "Team members confront peers about behaviors that might hurt the team.", dimension: "accountability" },
+            { id: 24, text: "There are clear consequences for failing to meet team expectations.", dimension: "accountability" },
+            
+            // Results dimension
+            { id: 25, text: "Team members prioritize team success over individual recognition.", dimension: "results" },
+            { id: 26, text: "The team consistently achieves its defined goals and objectives.", dimension: "results" },
+            { id: 27, text: "Team members willingly make sacrifices in their areas for the good of the team.", dimension: "results" },
+            { id: 28, text: "The team maintains focus on collective outcomes rather than individual achievements.", dimension: "results" },
+            { id: 29, text: "Team members readily assist one another beyond formal responsibilities.", dimension: "results" },
+            { id: 30, text: "The team celebrates collective achievements more than individual contributions.", dimension: "results" }
+        ];
+        
+        // Dimension descriptions and recommendations
+        const dimensions = {
+            trust: {
+                title: "Building Trust",
+                description: "The foundation of effective teamwork where members feel safe to be vulnerable and open with one another.",
+                lowScore: "Consider team-building activities that help members share personal histories and build relationships. Encourage leadership to model vulnerability and openness.",
+                mediumScore: "Continue developing psychological safety by acknowledging efforts when team members take interpersonal risks. Use personality or working style tools to deepen understanding of team members.",
+                highScore: "Your team has established strong trust. Maintain this by continuing to acknowledge vulnerability, bringing new team members into the trust circle, and addressing any breaches of trust immediately."
+            },
+            conflict: {
+                title: "Healthy Conflict",
+                description: "The ability to engage in unfiltered, passionate debate around ideas and issues.",
+                lowScore: "Establish that conflict is productive and necessary. Begin meetings by explicitly encouraging debate. Consider assigning a 'devil's advocate' role to normalize challenging ideas.",
+                mediumScore: "Continue developing conflict resolution skills. Remind team members to focus on ideas, not personalities. Mining for conflict by asking for different perspectives can help strengthen this muscle.",
+                highScore: "Your team handles conflict well. Continue to distinguish between productive conflict and destructive fighting. Regularly check that all voices are being heard in debates."
+            },
+            commitment: {
+                title: "Achieving Commitment",
+                description: "The ability to make clear decisions and commit to plans of action.",
+                lowScore: "End meetings with clear summaries of decisions and agreed-upon actions. Create clarity around priorities and deadlines. Consider implementing a decision-making framework.",
+                mediumScore: "Continue to improve by checking for alignment before ending discussions. Ensure all team members can articulate decisions and their rationale, even if they initially disagreed.",
+                highScore: "Your team commits effectively. Maintain this by documenting decisions and revisiting them when necessary. Continue to ensure everyone understands the 'why' behind decisions."
+            },
+            accountability: {
+                title: "Embracing Accountability",
+                description: "The willingness to call out peers on performance or behaviors that might hurt the team.",
+                lowScore: "Start by publishing team goals and standards. Regular progress reviews can help normalize accountability discussions. Consider peer-to-peer accountability exercises.",
+                mediumScore: "Continue developing by encouraging team members to be the primary source of accountability rather than the leader. Regular feedback sessions can strengthen this dimension.",
+                highScore: "Your team handles accountability well. Continue to ensure consequences for not meeting expectations are clear and consistently applied. Celebrate when team members hold each other accountable."
+            },
+            results: {
+                title: "Focusing on Results",
+                description: "The ability to focus on collective outcomes and team success rather than individual goals or status.",
+                lowScore: "Publicly track team results and outcomes. Tie rewards to team achievements rather than individual contributions. Minimize politics by openly discussing competing priorities.",
+                mediumScore: "Continue strengthening this area by regularly reviewing key metrics and celebrating team wins. Ensure individual goals align with team objectives to avoid competing priorities.",
+                highScore: "Your team focuses effectively on results. Maintain this by continuing to celebrate collective achievements and ensuring new initiatives don't distract from agreed-upon priorities."
+            }
+        };
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('assessment-form');
+            const resultsDiv = document.getElementById('results');
+            const quizDiv = document.getElementById('quiz');
+            const submitButton = document.getElementById('submit-button');
+            const backButton = document.getElementById('back-button');
+            const printButton = document.getElementById('print-button');
+            const resultsContent = document.getElementById('results-content');
+            
+            // Generate questions
+            generateQuestions();
+            
+            // Submit form
+            submitButton.addEventListener('click', function() {
+                if (validateForm()) {
+                    calculateResults();
+                    quizDiv.style.display = 'none';
+                    resultsDiv.style.display = 'block';
+                } else {
+                    alert('Please answer all questions before submitting.');
+                }
+            });
+            
+            // Back to assessment
+            backButton.addEventListener('click', function() {
+                resultsDiv.style.display = 'none';
+                quizDiv.style.display = 'block';
+            });
+            
+            // Print results
+            printButton.addEventListener('click', function() {
+                window.print();
+            });
+            
+            // Generate questions dynamically
+            function generateQuestions() {
+                questions.forEach(question => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question';
+                    
+                    const questionText = document.createElement('div');
+                    questionText.className = 'question-text';
+                    questionText.textContent = `${question.id}. ${question.text}`;
+                    
+                    const optionsDiv = document.createElement('div');
+                    optionsDiv.className = 'options';
+                    
+                    // Create 5 radio options from 1 to 5
+                    const options = [
+                        { value: 1, label: 'Rarely' },
+                        { value: 2, label: 'Occasionally' },
+                        { value: 3, label: 'Sometimes' },
+                        { value: 4, label: 'Usually' },
+                        { value: 5, label: 'Almost Always' }
+                    ];
+                    
+                    options.forEach(option => {
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'option';
+                        
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = `question-${question.id}`;
+                        radio.id = `q${question.id}-option${option.value}`;
+                        radio.value = option.value;
+                        radio.dataset.dimension = question.dimension;
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = `q${question.id}-option${option.value}`;
+                        label.textContent = `${option.label} (${option.value})`;
+                        
+                        optionDiv.appendChild(radio);
+                        optionDiv.appendChild(label);
+                        optionsDiv.appendChild(optionDiv);
+                    });
+                    
+                    questionDiv.appendChild(questionText);
+                    questionDiv.appendChild(optionsDiv);
+                    form.appendChild(questionDiv);
+                });
+            }
+            
+            // Validate that all questions are answered
+            function validateForm() {
+                const questionCount = questions.length;
+                const answeredCount = form.querySelectorAll('input[type="radio"]:checked').length;
+                return questionCount === answeredCount;
+            }
+            
+            // Calculate and display results
+            function calculateResults() {
+                // Initialize scores for each dimension
+                const scores = {
+                    trust: 0,
+                    conflict: 0,
+                    commitment: 0,
+                    accountability: 0,
+                    results: 0
+                };
+                
+                // Count questions per dimension
+                const questionCounts = {
+                    trust: 0,
+                    conflict: 0,
+                    commitment: 0,
+                    accountability: 0,
+                    results: 0
+                };
+                
+                // Calculate raw scores
+                const selectedOptions = form.querySelectorAll('input[type="radio"]:checked');
+                selectedOptions.forEach(option => {
+                    const dimension = option.dataset.dimension;
+                    scores[dimension] += parseInt(option.value);
+                    questionCounts[dimension]++;
+                });
+                
+                // Calculate percentage scores (0-100)
+                const percentageScores = {};
+                for (const dimension in scores) {
+                    const maxScore = questionCounts[dimension] * 5; // 5 is the max value per question
+                    percentageScores[dimension] = Math.round((scores[dimension] / maxScore) * 100);
+                }
+                
+                // Generate results HTML
+                resultsContent.innerHTML = '';
+                
+                // Add each dimension section
+                for (const dimension in percentageScores) {
+                    const score = percentageScores[dimension];
+                    const dimensionInfo = dimensions[dimension];
+                    
+                    const dimensionDiv = document.createElement('div');
+                    dimensionDiv.className = 'dimension';
+                    
+                    const header = document.createElement('h3');
+                    header.innerHTML = `${dimensionInfo.title} <span class="score">${score}%</span>`;
+                    
+                    const progressContainer = document.createElement('div');
+                    progressContainer.className = 'progress-container';
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'progress-bar';
+                    progressBar.style.width = `${score}%`;
+                    
+                    const description = document.createElement('p');
+                    description.textContent = dimensionInfo.description;
+                    
+                    const recommendation = document.createElement('p');
+                    if (score < 60) {
+                        recommendation.textContent = `Recommendation: ${dimensionInfo.lowScore}`;
+                    } else if (score < 80) {
+                        recommendation.textContent = `Recommendation: ${dimensionInfo.mediumScore}`;
+                    } else {
+                        recommendation.textContent = `Recommendation: ${dimensionInfo.highScore}`;
+                    }
+                    
+                    progressContainer.appendChild(progressBar);
+                    dimensionDiv.appendChild(header);
+                    dimensionDiv.appendChild(progressContainer);
+                    dimensionDiv.appendChild(description);
+                    dimensionDiv.appendChild(recommendation);
+                    
+                    resultsContent.appendChild(dimensionDiv);
+                }
+                
+                // Create radar chart
+                createChart(percentageScores);
+            }
+            
+            // Create radar chart
+            function createChart(scores) {
+                const ctx = document.getElementById('results-chart').getContext('2d');
+                
+                // Check if there's an existing chart and destroy it
+                if (window.resultsChart) {
+                    window.resultsChart.destroy();
+                }
+                
+                // Create new chart
+                window.resultsChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: [
+                            'Building Trust',
+                            'Healthy Conflict',
+                            'Achieving Commitment',
+                            'Embracing Accountability',
+                            'Focusing on Results'
+                        ],
+                        datasets: [{
+                            label: 'Team Score',
+                            data: [
+                                scores.trust,
+                                scores.conflict,
+                                scores.commitment,
+                                scores.accountability,
+                                scores.results
+                            ],
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    display: true
+                                },
+                                suggestedMin: 0,
+                                suggestedMax: 100
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
